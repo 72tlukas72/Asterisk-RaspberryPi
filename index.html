@@ -1,0 +1,301 @@
+<!DOCTYPE HTML> 
+<html>
+ <head>
+  <title>VoIP semestrální projekt</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<!--[if lte IE 8]><script src="css/ie/html5shiv.js"></script><![endif]-->
+	<script src="js/jquery.min.js"></script>
+	<script src="js/skel.min.js"></script>
+	<script src="js/init.js"></script>
+	<noscript>
+	 <link rel="stylesheet" href="css/skel.css" />
+	 <link rel="stylesheet" href="css/style.css" />
+	 <link rel="stylesheet" href="css/style-wide.css" />
+	</noscript>
+	<!--[if lte IE 8]><link rel="stylesheet" href="css/ie/v8.css" /><![endif]-->
+	<!--[if lte IE 9]><link rel="stylesheet" href="css/ie/v9.css" /><![endif]-->
+ </head>
+ <body>     
+	<section id="header" class="dark">
+	 <header>
+	   <h1>ASTERISK NA RASPBERRY PI</h1>
+		<p class="centrum"><b>Lukáš Tesař</b> &amp; <b>Martin Warzeszka</b></p><br>
+    <p></p>
+	 </header>
+   <footer>
+					<a href="#software" class="button scrolly">PREZENTACE</a>
+				</footer>
+	</section>     
+	<section id="software" class="main">
+	 <header>
+	  <div class="container">
+		 	<h2>Cíle testování</h2>
+						<p>Naším cílem bylo, otestovat schopnost odbavovat hovory na Raspberry PI a zjístit, kde jsou jeho hardwarové limity. Testovali jsme maximální počet současných
+            hovorů a sledovali jsme vytížení procesoru, paměti a celkové zatížení systému. Testy jsme prováděli se třemi různými kodeky a na dvou verzích Raspberry PI.</p>
+    </div>
+	 </header>
+	</section>  
+	<section id="instalace" class="main">
+	 <div class="content style1 dark">
+    <header>
+		 <div class="container">
+       <h3>Použité vybavení a schéma zapojení</h3>
+     </div>
+		</header>
+    <div class="container">
+     <p>Při testování byla použita verze Asterisku 14.1.2 z 10.11.2016. Verze SIPp 3.5.1 z března roku 2016. UAC a UAS běželi na Lubuntu 15.10.</p>
+     <p>Raspberry PI v3 s hardwarovými parametry: 
+     <ul class="default">
+     <li>64bit ARMv7 1,2 GHz</li>
+     <li>1 GB RAM</li>
+      <li>OS Raspbian Jessie z 23.9.2016</li>
+     </ul></p>
+     <p>Raspberry PI v1 s hardwarovými parametry: 
+     <ul class="default">
+     <li>32bit ARMv6 700 MHz</li>
+     <li>512 MB RAM</li>
+     <li>OS Raspbian Jessie z 23.9.2016</li>
+     </ul>          
+     </p>
+   </div>
+	</section>    
+	<section id="ipv6" class="main">
+	 <header>
+		<div class="container">
+		 <h2>Schéma zapojení</h2>
+		     <img src="conf/schema.png" alt="schema.png, 8,0kB" title="schema" border="0" height="250" width="250">          
+    </div>
+	 </header>
+  </section>    
+  	<section id="instalace" class="main">
+	 <div class="content style1 dark">
+    <header>
+		 <div class="container">
+       <h3>Instalace Asterisku</h3>
+     </div>
+		</header>
+    <div class="container">
+     <p>Nejdříve je potřeba doinstalovat prerekvizity:</p>
+     <p class="console w100" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> sudo apt-get install libncurses5-dev, uuid-dev, libjansson-dev, libxml2-dev, sqlite3, libsqlite3-dev<br /></p>
+     <p>Stáhneme aktuální verzi Asterisku:</p>
+     <p class="console w75" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-14-current.tar.gz<br /></p>
+     <p>Rozbalíme:</p>
+     <p class="console w50" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> tar xvf asterisk-14-current.tar.gz<br /></p>
+     <p>Zvolíme adresář Asterisk-&lt;aktuální verze&gt;</p>
+     <p class="console w25" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> cd asterisk-14.1.2<br /></p>
+     <p>Před kompilací je potřeba zkontrolovat všechny závislosti (zda jsou nainstalovány všechny potřebné prerekvizity):</p>
+     <p class="console w25" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> sudo ./configure<br /></p>
+     <p>Pokud je vše v pořádku je potřeba Asterisk zkompilovat a nainstalovat:</p>
+     <p class="console w25" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> sudo make menuselect<br />
+      <font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font>sudo make<br />
+      <font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font>sudo make install <br />
+      <font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font>sudo make samples
+      </p><br />        
+      <h3>Konfigurace Asterisku</h3>
+      <p>Konfigurační soubor SIPovských uživatelských účtů Asterisku je umístěn v: /etc/asterisk/sip.conf</p>
+      <p class="console w25">
+      [general]<br />
+      port=5060<br />
+      bindaddr=0.0.0.0<br />
+      transport=udp<br />
+            <br />
+      [10000]<br />       
+      type=friend<br />         
+      context=test<br />
+      host=192.168.1.25<br />
+      secret=uac<br />
+      canreinvite=no<br />
+      disallow=all<br />
+      allow=all<br />
+      qualify=no<br /><br />
+      <b>.</b><br />
+      <b>.</b><br />
+      <b>.</b><br /><br />
+      [50000]<br /> 
+      type=friend<br />
+      context=test<br />
+      host=192.168.1.26<br />
+      secret=uas<br />
+      canreinvite=no<br />
+      disallow=all<br />
+      allow=all<br />
+      qualify=no<br />      
+      </p>
+      <p>Dále je potřeba nastavit „dial plan“ v souboru extensions.conf, který se nachází v /etc/asterisk/extensions.conf</p>
+      <p class="console w25">[test]<br />
+      exten => _[1-9]XXXX,1,Dial(SIP/${EXTEN},25)</p>       
+   </div>
+	</section>  
+  <section id="ipv6" class="main">
+	 <header style="padding-bottom:0px;">
+   <div class="container">
+   <h2>Instalace a konfigurace SIPp</h2>
+   </div>
+   </header>
+		<div class="container" style="background-color:white; height:100%; width:100%; padding-left:70px;">  		 
+		<p>Nejdříve je potřeba doinstalovat prerekvizity:</p>
+     <p class="console w100" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> sudo apt-get install ncurses-dev openssl g++ gcc libssl-dev libpcap-dev libnet1-dev<br /></p>
+     <p>Stáhneme aktuální verzi SIPp:</p>
+     <p class="console w75" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> wget https://github.com/SIPp/sipp/releases/download/v3.5.1/sipp-3.5.1.tar.gz<br /></p>
+     <p>Rozbalíme:</p>
+     <p class="console w50" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> tar xvf sipp-3.5.1.tar.gz<br /></p>
+     <p>Zvolíme adresář SIPp-&lt;aktuální verze&gt;</p>
+     <p class="console w50" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> cd sipp-3.5.1<br /></p>
+     <p>Před kompilací je potřeba zkontrolovat všechny závislosti (zda jsou nainstalovány všechny potřebné prerekvizity):</p>
+     <p class="console w50" style="line-height:40px;"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font> sudo ./configure --with-pcap --with-openssl<br /></p>
+     <p class="console w50"><font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font>sudo make<br />
+      <font color="#00FF00">pi@raspberrypi:</font><font color="blue">~ $</font>sudo make install</p> <br />                                                              
+      <p>V přiložených schématech se mění parametr <b>RTP/AVP</b> <#> a parametr <b>rtpmap</b> dle tabulky níže.</p>
+      <table class="default" style="width:70%;" >
+      <tr><td><b>Kodek</b></td><td><b>RTP/AVP</b></td><td><b>rtpmap</b></td></tr>
+      <tr><td>G.711 a-law</td><td>8</td><td>PCMA</td></tr>
+      <tr><td>G.729</td><td>18</td><td>G729</td></tr>
+      <tr><td>GSM</td><td>3</td><td>GSM</td></tr>
+      </table>            
+      <p> XML schémata pro stranu UAC a UAS:</p>
+      <ul class="default">
+      <li><a href="conf/uac_asterisk.xml">uac_asterisk.xml</a></li>
+      <li><a href="conf/uas_asterisk.xml">uas_asterisk.xml</a></li>
+      </ul>        
+      <p>Hlasové vzorky pro RTP stream:</p>
+      <p><ul class="default">
+      <li><a href="conf/vzorekGSMRTP.pcap">vzorekGSMRTP.pcap</a></li>
+      <li><a href="conf/vzorekG711AlawRTP.pcap">vzorekG711AlawRTP.pcap</a></li>
+      <li><a href="conf/vzorekG729ARTP.pcap">vzorekG729ARTP.pcap</a></li>
+      </ul></p>     
+      <p>Sekvenční soubor proměnných:</p>
+      <ul class="default">
+      <li><a href="conf/asterisk.csv">asterisk.csv</a></li>
+      </ul>                                      
+    <h3 class="nadpis"><b>Spuštění klienta UAC</b></h3>
+    <p>Spustíme příkazem:</p>
+    <p class= "console w80" style="line-height:40px;">lukas@mujpc:~Desktop/sipp-3.5.1$ sudo ./sipp -sf uac_asterisk.xml -i 192.168.1.25 -p 5060 -inf asterisk.csv -m 3600 -r 4 -mp 7000 192.168.1.19<p>
+    <p>
+    <table class="default" style="width:70%;" >
+    <tr><td><b>Parametr</b></td><td><b>Hodnota</b></td><td><b>Popis</b></td></tr>
+    <tr><td>-sf</td><td>uac_asterisk.xml</td><td>Scenario file</td></tr>
+    <tr><td>-i</td><td>192.168.1.25</td><td>IP adresa klienta</td></tr>
+    <tr><td>-p</td><td>5060</td><td>Port pro naslouchání klienta</td></tr>
+    <tr><td>-inf</td><td>asterisk.csv</td><td>Vstupní hodnoty pro testování</td></tr>
+    <tr><td>-m</td><td>3600</td><td>Maximální počet uskutečněných hovorů</td></tr>
+    <tr><td>-r</td><td>4</td><td>Počet vygenerovaných hovorů za sekundu</td></tr>
+    <tr><td>-mp</td><td>7000</td><td>Zdrojový port pro RTP</td></tr>       
+    </table>
+    </p>
+    <p>Tímto příkazem, SIPp v modu UAC s adresou 192.168.1.25 na portu 5060 se vstupními hodnotami ze souboru asterisk.csv generuje každou sekundu 4 hovory, do celkového počtu 3600 na PBX s adresou 192.168.1.19.</p>    
+       
+    <h3 class="nadpis"><b>Spuštění serveru UAS</b></h3>     
+    <p>Spustíme příkazem:</p>
+    <p class="console w80" style="line-height:40px;">martin@mujpc: ~Desktop/sipp-3.5.1$ sudo ./sipp -sf uas_asterisk.xml -i 192.168.1.26 -p 5060 -rtp_echo</p>
+    <p><table class="default" style="width:70%;">
+    <tr><td><b>Parametr</b></td><td><b>Hodnota</b></td><td><b>Popis</b></td></tr>
+    <tr><td>-sf</td><td>uas_asterisk.xml</td><td>Scenario file</td></tr>
+    <tr><td>-i</td><td>192.168.1.26</td><td>IP adresa serveru</td></tr>
+    <tr><td>-p</td><td>5060</td><td>Port pro naslouochání serveru</td></tr>
+    <tr><td>-rtp_echo</td><td>-</td><td>Odpověď na RTP zprávy</td></tr>
+       </table></p>
+       <p>Tímto příkazem, SIPp v modu UAS s adresou 192.168.1.26 na portu 5060, začne generovat odpovědi na RTP zprávy.</p>      
+    </div>        	
+  </section>   
+  	<section id="instalace" class="main">
+	 <div class="content style1 dark">
+    <header>
+		 <div class="container">
+       <h3>Naměřené hodnoty pro RPI v3</h3>
+     </div>
+		</header>
+    <div class="container">
+    <table class="default" style="width:100%;"border="0">
+      <tr><td>Kodek</td><td>Průměrné vytížení CPU</td><td>Průměrné vytížení RAM</td><td style="width:15%">Load [1;5;15]</td><td>Počet současných hovorů</td><td>Počet neůspěšných hovorů</td><td>Hovorů celkem</td></tr>
+      <tr><td rowspan="4" style="vertical-align:middle; width:12%"><b>G711 a-law</b></td><td>38%</td><td>134</td><td>0,10; 0,27; 0,25</td><td>30</td><td>0 (0 %)</td><td>900</td></tr>
+      <tr>                               <td>52%</td><td>139</td><td>0,41; 0,42; 0,40</td><td>60</td><td>1 (0 %)</td><td>1800</td></tr>
+      <tr>                               <td>78%</td><td>146</td><td>2,20; 1,72; 1,05</td><td>90</td><td>204 (8 %)</td><td>2700</td></tr>
+      <tr>                               <td>93%</td><td>163</td><td>1,77; 2,27; 1,32</td><td>120</td><td>1293 (36 %)</td><td>3600</td></tr>
+    </table>  
+    
+    <table class="default" style="width:100%;"border="0">
+      <tr><td>Kodek</td><td>Průměrné vytížení CPU</td><td>Průměrné vytížení RAM</td><td style="width:15%">Load [1;5;15]</td><td>Počet současných hovorů</td><td>Počet neůspěšných hovorů</td><td>Hovorů celkem</td></tr>
+      <tr><td rowspan="9" style="vertical-align:middle; width:12%"><b>G729</b></td><td>19%</td><td>131</td><td>0,14; 0,22; 0,16</td><td>30</td><td>0 (0 %)</td><td>900</td></tr>
+      <tr>                               <td>28%</td><td>131</td><td>0,29; 0,37; 0,22</td><td>60</td><td>0 (0 %)</td><td>1800</td></tr>
+      <tr>                               <td>37%</td><td>134</td><td>0,40; 0,46; 0,32</td><td>90</td><td>0 (0 %)</td><td>2700</td></tr>
+      <tr>                               <td>49%</td><td>140</td><td>0,64; 0,57; 0,36</td><td>120</td><td>0 (0 %)</td><td>3600</td></tr>
+      <tr>                               <td>58%</td><td>149</td><td>0,78; 0,80; 0,53</td><td>150</td><td>0 (0 %)</td><td>4500</td></tr>
+      <tr>                               <td>75%</td><td>162</td><td>0,98; 0,97; 0,70</td><td>180</td><td>2 (0 %)</td><td>5400</td></tr>
+      <tr>                               <td>91%</td><td>180</td><td>1,29 1,36; 0,96</td><td>210</td><td>147 (2 %)</td><td>6300</td></tr>
+      <tr>                               <td>99%</td><td>192</td><td>1,78; 1,53; 1,20</td><td>240</td><td>729 (10 %)</td><td>7200</td></tr>
+    </table> 
+    
+    <table class="default" style="width:100%;"border="0">
+      <tr><td>Kodek</td><td>Průměrné vytížení CPU</td><td>Průměrné vytížení RAM</td><td style="width:15%">Load [1;5;15]</td><td>Počet současných hovorů</td><td>Počet neůspěšných hovorů</td><td>Hovorů celkem</td></tr>
+      <tr><td rowspan="4" style="vertical-align:middle; width:12%"><b>GSM</b></td><td>37%</td><td>130</td><td>0,34; 0,37; 0,26</td><td>30</td><td>0 (0 %)</td><td>900</td></tr>
+      <tr>                               <td>51%</td><td>136</td><td>0,46; 0,53; 0,45</td><td>60</td><td>0 (0 %)</td><td>1800</td></tr>
+      <tr>                               <td>73%</td><td>143</td><td>0,78; 1,32; 0,77</td><td>90</td><td>107 (4 %)</td><td>2700</td></tr>
+      <tr>                               <td>85%</td><td>153</td><td>0,83; 1,20; 0,81</td><td>120</td><td>983 (27 %)</td><td>3600</td></tr>
+    </table>   
+      
+   </div>
+   <header>
+		 <div class="container">
+       <h3>Naměřené hodnoty pro RPI v1</h3>
+     </div>
+		</header>
+    <div class="container">
+    <table class="default" style="width:100%;"border="0">
+      <tr><td>Kodek</td><td>Průměrné vytížení CPU</td><td>Průměrné vytížení RAM</td><td style="width:15%">Load [1;5;15]</td><td>Počet současných hovorů</td><td>Počet neůspěšných hovorů</td><td>Hovorů celkem</td></tr>
+      <tr><td rowspan="2" style="vertical-align:middle; width:12%"><b>G711 a-law</b></td><td>78%</td><td>133</td><td>4,31; 5,67; 5,60</td><td>30</td><td>0 (0 %)</td><td>900</td></tr>
+      <tr>                               <td>90%</td><td>136</td><td>9,41; 9,38; 8,93</td><td>60</td><td>730 (41 %)</td><td>1800</td></tr>      
+    </table>
+   
+    <table class="default" style="width:100%;"border="0">
+      <tr><td>Kodek</td><td>Průměrné vytížení CPU</td><td>Průměrné vytížení RAM</td><td style="width:15%">Load [1;5;15]</td><td>Počet současných hovorů</td><td>Počet neůspěšných hovorů</td><td>Hovorů celkem</td></tr>
+      <tr><td rowspan="2" style="vertical-align:middle; width:12%"><b>G729</b></td><td>68%</td><td>131</td><td>10,30; 9,64; 3,32</td><td>30</td><td>0 (0 %)</td><td>900</td></tr>
+      <tr>                               <td>90%</td><td>132</td><td>10,80; 11,34; 11,20</td><td>60</td><td>597 (33 %)</td><td>1800</td></tr>      
+    </table>
+    
+    <table class="default" style="width:100%;"border="0">
+      <tr><td>Kodek</td><td>Průměrné vytížení CPU</td><td>Průměrné vytížení RAM</td><td style="width:15%">Load [1;5;15]</td><td>Počet současných hovorů</td><td>Počet neůspěšných hovorů</td><td>Hovorů celkem</td></tr>
+      <tr><td rowspan="2" style="vertical-align:middle; width:12%"><b>GSM</b></td><td>91%</td><td>130</td><td>26,05; 22,78; 14,89</td><td>30</td><td>229 (25 %)</td><td>900</td></tr>
+   <tr></tr>     
+    </table>
+    
+    </div>
+	</section>    
+  	<section id="software" class="main">
+	 <header>
+	  <header style="padding-bottom:0px;">	 
+		 	<h2>Grafy</h2> 					
+    </div>   
+	 </header>
+  <div class="container" style="background-color:white; height:100%; width:100%; padding-left:70px;">  	
+   <p>Závislost zatížení CPU na počtu hovorů</p>
+        <p class="moje"><img style="width:95%;"  src="conf/zavislostCPU.png" alt="zavislostCPU.png, 34kB" title="zavislostCPU" border="0"></p>
+    <p>Závislost neúspěšných hovorů na počtu současných hovorů</p>
+        <p class="moje"><img style="width:95%;"  src="conf/neuspesneHovory.png" alt="zavislostCPU.png, 34kB" title="zavislostCPU" border="0"></p>
+     </div>
+     <div class="container" style="background-color:white; height:100%; width:100%; padding-left:70px;">
+     <h2 class="nadpis" style="font-size:40px; align:left;">Pro porovnání RPI v1</h2>
+     <p>Závislost zatížení CPU na počtu hovorů</p>
+        <p class="moje"><img style="width:95%;"  src="conf/zavislostCPUrpi1.png" alt="zavislostCPU.png, 34kB" title="zavislostCPU" border="0"></p>
+    <p>Závislost neúspěšných hovorů na počtu současných hovorů</p>
+        <p class="moje"><img style="width:95%;"  src="conf/neuspesneHovoryRPI1.png" alt="zavislostCPU.png, 34kB" title="zavislostCPU" border="0"></p>
+     </div>	
+	</section>      
+	<section id="zdroje" class="main">
+   <div class="content style1 dark">
+	  <header>
+		 <div class="container" style="text-align:center;">
+		  <h3>Děkuji za pozornost</h3> 		 	
+		 </div>
+		</header>
+   </div>
+	</section> 			
+  <section id="footer">
+   <h6>ASTERISK NA RASPBERRY PI </h6>
+   <div class="copyright">
+	  <ul class="menu">
+	   <li>&copy; All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+	  </ul>
+	 </div>
+  </section> 
+ </body>
+</html>
